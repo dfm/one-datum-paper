@@ -3,7 +3,7 @@
 \usepackage{microtype}
 \usepackage{amsmath}
 
-\include{figures/githash}
+% \include{figures/githash}
 
 \newcommand{\package}[1]{\textsf{#1}}
 \newcommand{\project}[1]{\textsl{#1}}
@@ -14,12 +14,12 @@
 % Math
 \newcommand{\dd}{\ensuremath{\,\mathrm{d}}}
 
-\shorttitle{Sample article}
+\shorttitle{Gaia RV orbits}
 \shortauthors{Foreman-Mackey et al.}
 
 \begin{document}
 
-\title{Millions of radial velocity orbits from Gaia\footnote{Git hash: \textsf{\githash}}}
+\title{Millions of radial velocity orbits from Gaia}
 
 \correspondingauthor{Daniel Foreman-Mackey}
 \email{dforeman-mackey@flatironinstitute.org}
@@ -44,13 +44,18 @@ It has been previously demonstrated that the published radial velocity and astro
 In this paper, however, we demonstrate that it is possible to use the reported radial velocity errors and a probabilistic model to place constraints on the radial velocity amplitude and, in some cases, some other properties of the orbit.
 These measurements are useful for many applications, including \emph{(a)} discovering black holes, \emph{(b)} vetting transiting exoplanet discoveries, \emph{(c)} measuring the masses of a large sample of eclipsing binaries, \emph{(d)} quantify the binary fraction across the H--R diagram, and \emph{(e)} informing constraints on exoplanet formation and evolution theory, to name a few.
 
-\section{The basic idea}
+The fundamental idea of this paper is that even though the \Gaia\ catalog only includes a single RV measurement and its error, we can still make calibrated probabilistic inferences about the RV time series.
+In particular, we know the number of RV observations that were used to measure the RV and its uncertainty.
+Similarly, we can estimate the expected per-transit RV uncertainty based on the distribution of targets of similar color and magnitude.
+Using these auxillary values, we can compute the expected distribution of RV error, and compare this to the measured value.
+It has been previously identified that the RV error measurements scale with RV semi-amplitude (IS THERE A CITATION; add a figure), but below we take this one step further and derive an interpretable, physical, probabilistic model for this effect that allows us to directly infer the semi-amplitude, and weak constraints on the other orbital parameters.
 
-Comment on RV error vs sample variance.
+In the following sections, we derive and discuss the components of this model, validate and characterize the performance using simulated data, and compare to archival binary surveys.
+To start, we build a hierarchical probabilistic model to estimate the per-transit RV measurement uncertainty of the \Gaia\ survey as a function of apparent magnitude and observed color.
 
 \section{Estimating the per-transit radial velocity precision}
 
-A key element of our analysis is that we have a reasonably accurate estimate of the per-transit radial velocity measurement uncertainty.
+A key element of our analysis is that we must make a reasonably accurate estimate of the per-transit radial velocity measurement uncertainty.
 The \Gaia\ pipeline does not release a public estimate of this, but it can be estimated from the data in the public catalog.
 To make this estimate, the key assumption that we make is that the RV uncertainty depends only on a target's (reddened) $G_\mathrm{BP} - G_\mathrm{RP}$ color and apparent $G$-band magnitude $m_\mathrm{G}$.
 While this is certainly not the full story, we discuss several validation experiments below and argue that this is not an overly restrictive assumption given the precision of our measurements.
@@ -131,10 +136,14 @@ We explore the limitations of such an assumption in the following sections, but 
 If each measured RV sample for a given \Gaia\ target $n$ was truly just generated as Gaussian noise with variance ${\sigma_n}^2$, the sampling distribution for the measured, normalized RV variance $X_n = (T_n - 1)\,{s_n}^2 / {\sigma_n}^2$ would be a $\chi^2$ with $T_n - 1$ degrees of freedom.
 Therefore, we can compute the $p$-value for this null hypothesis as
 \begin{eqnarray}
-\mathrm{Pr}(X > X_n\,|\,\mathrm{null}) &=& \int_{X_n}^\infty \chi^2 (X;\,T_n-1) \dd X \quad.
+  \mathrm{Pr}(X > X_n\,|\,\mathrm{null}) &=& \int_{X_n}^\infty \chi^2 (X;\,T_n-1) \dd X \quad.
 \end{eqnarray}
-This is a useful number since, in principle, it can be used to construct a catalog with a specific false positive rate.
-Some more words about $p$-values.
+This is a useful number since, it can be used to construct a catalog with a specific expected false positive rate.
+
+Specifically, we construct a binary catalog by selecting all targets with a $p$-value below some threshold $P_0$.
+If our Gaussian model is correct and our estimates of the per-transit measurement uncertainty is accurate, then we would expect targets without companions to pass threshold with probability $P_0$.
+In other words, setting $P_0 = 0.001$, we would expect 1 in 1,000 single targets to pass our cut and be incorrectly labelled as a binary.
+This number does not directly map to the false positive rate, since that will also depend on the true binary fraction, however, it gives us a tuning parameter that can trade off precision and recall in our selection.
 
 \section{Completeness \& reliability}
 
@@ -147,10 +156,10 @@ There are other parameters that affect the detection thresholds including, most 
 We use an approximate broken power-law model for the number of radial velocity transits:
 \begin{eqnarray}
   \label{eq:nb-transits}
-p(T_n) &\propto& \left\{\begin{array}{ll}
-  1 & T_n < T_\mathrm{break} \\
-  (T_n / T_\mathrm{break})^{-\alpha} & \mathrm{otherwise}
-\end{array} \right.
+  p(T_n) &\propto& \left\{\begin{array}{ll}
+    1                                  & T_n < T_\mathrm{break} \\
+    (T_n / T_\mathrm{break})^{-\alpha} & \mathrm{otherwise}
+  \end{array} \right.
 \end{eqnarray}
 where the parameters are set to approximately match the observed distribution.
 These parameters are set as follows: the breakpoint is $T_n = 12$ and the power-law index is $\alpha = 6$.
@@ -168,7 +177,62 @@ Figure SOMEOTHERFIGURE shows the inferred semi-amplitude for these simulations a
 
 These measurements don't fully capture all the limitations of this inference, but we will try to address some of those below by comparing to other binary surveys.
 
+\section{A model for the radial velocity error}
+
+Apparently \Gaia\ reports RV error $\epsilon$ defined as:
+\begin{eqnarray}
+  \epsilon^2 = \left(\sqrt{\frac{\pi}{2\,N}}\,s\right)^2 + 0.11^2
+\end{eqnarray}
+where
+\begin{eqnarray}
+  s^2 = \frac{1}{N-1}\sum_{n=1}^N \left(v_n - \bar{v}\right)^2
+\end{eqnarray}
+is what we actually want.
+
+We need to compute a probability density for the $s^2$ parameter above conditioned on a set of $N$ noisy observations of an RV orbit (with some given parameters).
+I'm going to model the noise as Gaussian with a known, constant variance $\sigma^2$, but it's \emph{possible} (although probably tricky) that we could relax some of that.
+
+Next, the key realization is that if we have a set of $N$ Gaussian random variables $X_n \sim \mathcal{N}\left(\mu_n,\,\sigma^2\right)$ (with known, but different, means $\mu_n$, in our case given by the RV orbit evaluated at $t_n$), then the random variable $Y = \sum X_n^2$ will be distributed as a noncentral chi-squared.
+To use this to our advantage, we first argue that the argument in the variance sum $v_n - \bar{v}$ will be a Gaussian random variable
+\begin{eqnarray}
+  v_n - \bar{v} \sim \mathcal{N}\left(\mu_n - \bar{\mu},\,\sigma^2\right)
+\end{eqnarray}
+where $\mu_n$ is the RV orbit \emph{model} at time $t_n$.
+This isn't totally obvious since the $v_n$ and $\bar{v}$ distributions aren't necessarily independent, but I think it's ok because [insert relevant math here] (this derivation will look similar to the sampling distirbution for the sample variance calculations so I should double check there, but this definitely works in practice).
+
+Then we're where we need to be: $(N - 1)\,s^2$, our quantity of interest, is now the sum of squares of $N$ Gaussian random variables.
+Following the Wikipedia page for the noncentral chi-squared distribution\footnote{\url{https://en.wikipedia.org/wiki/Noncentral_chi-squared_distribution}}, we need to rescale our parameters to have unit variance:
+\begin{eqnarray}
+  \frac{v_n - \bar{v}}{\sigma} \sim \mathcal{N}\left(\frac{v_n - \bar{\mu}}{\sigma},\,1\right)
+\end{eqnarray}
+where we have used the assumption that $\sigma$ is known and constant.
+I think that we could allow non-constant $\sigma$ but that would result in a "generalized chi-squared" distribution which has no closed form\footnote{\url{https://en.wikipedia.org/wiki/Generalized_chi-squared_distribution}}.
+
+Then the parameters of our noncentral chi-squared will be
+
+\begin{eqnarray}
+  k = N
+\end{eqnarray}
+
+and
+
+\begin{eqnarray}
+  \lambda = \sum \frac{N\,(\mu_n - \bar{\mu})^2}{(1 + N)\,\sigma^2}
+\end{eqnarray}
+
+And the parameter that is thus distributed is:
+
+\begin{eqnarray}
+  \xi^2 = \frac{(N - 1)\,s^2}{\sigma^2}
+\end{eqnarray}
+
+That was a bit ugly.
+Let's see if this works with a simulation.
+We'll simulate a single simple RV curve and then compute the distribution of $s^2$ over many different realizations of the noise.
+
 \section{Bulk radial velocity inference}
+
+Finally we can combine the measurement uncertainty estimates from SOME SECTION with the
 
 \section{Artisanal radial velocities}
 
@@ -179,15 +243,15 @@ These measurements don't fully capture all the limitations of this inference, bu
 This is a paper.
 See Figure~\ref{fig:sim_rv_uncertainty} and Figure~\ref{fig:rv_uncert_contour}.
 
-\begin{figure}
-  \plotone{figures/sim_rv_uncertainty.pdf}
-  \caption{This is a cool figure. \label{fig:sim_rv_uncertainty}}
-\end{figure}
+% \begin{figure}
+%   \plotone{figures/sim_rv_uncertainty.pdf}
+%   \caption{This is a cool figure. \label{fig:sim_rv_uncertainty}}
+% \end{figure}
 
-\begin{figure}
-  \plotone{figures/rv_uncert_contour.pdf}
-  \caption{This is another cool figure. \label{fig:rv_uncert_contour}}
-\end{figure}
+% \begin{figure}
+%   \plotone{figures/rv_uncert_contour.pdf}
+%   \caption{This is another cool figure. \label{fig:rv_uncert_contour}}
+% \end{figure}
 
 
 \acknowledgments
