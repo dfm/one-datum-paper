@@ -14,24 +14,39 @@
 % Math
 \newcommand{\dd}{\ensuremath{\,\mathrm{d}}}
 
-\shorttitle{Gaia RV orbits}
+\shorttitle{Unresolved spectroscopic binaries with \Gaia\ I}
 \shortauthors{Foreman-Mackey et al.}
 
 \begin{document}
 
-\title{Millions of radial velocity orbits from Gaia}
+\title{Unresolved spectroscopic binaries with \Gaia\ I: \\
+  Detection \& orbital characterization using EDR3 radial velocity errors}
 
-\correspondingauthor{Daniel Foreman-Mackey}
+\correspondingauthor{Daniel~Foreman-Mackey}
 \email{dforeman-mackey@flatironinstitute.org}
 
 \author[0000-0002-9328-5652]{Daniel Foreman-Mackey}
-\affiliation{Center for Computational Astrophysics, Flatiron Institute, New York, NY}
+\affiliation{Center for Computational Astrophysics, Flatiron Institute, 162 5th Ave, New York, NY 10010, USA}
 
-\author{TBD}
+\author{Quadry~Chance}
+\affiliation{Center for Computational Astrophysics, Flatiron Institute, 162 5th Ave, New York, NY 10010, USA}
+\affiliation{University of Florida, 211 Bryant Space Science Center, Gainesville, FL 32611, USA}
+
+\author{Andrew~R.~Casey}
+\affiliation{School of Physics \& Astronomy, Monash University, Wellington Road, Clayton 3800, Victoria, Australia}
+
+\author{Others TBD}
 \noaffiliation{}
 
 \begin{abstract}
-  This is a paper about unresolved binaries in Gaia RVs.
+  The Early Data Release 3 (EDR3) from the \Gaia\ Mission includes measurements of the radial velocities of more than 7 million targets with the goal of providing a detailed view of the phase space of the Milky Way.
+  Many of these stars are, in fact, members of unresolved multiple star systems and the effects of these orbits are generally seen as a source of contamination in the radial velocity catalog.
+  In this paper, we the published radial velocity uncertainty estimates can provide evidence the existence of an unresolved stellar companion and, under the assumption of a gravitationally-bound binary system, place constraints its orbital parameters.
+  We build a flexible data-driven model to estimate \Gaia's intrinsic per-transit radial velocity uncertainty as a function of color and apparent magnitude.
+  Using these estimates, we develop a procedure for quantifying the outlier probability of a \Gaia\ EDR3 radial velocity target, and compute this probability for all targets with at least 3 radial velocity transits in EDR3.
+  Finally, we derive a physical model for inferring the orbital parameters of the binary system based only on the published radial velocity error, the number of radial velocity transits, and the observational baseline.
+  These parameters are generally only weakly constrained, with the exception of the radial velocity semi-amplitude, which can typically be estimated with a precision of $\sim PPP\%$.
+  We expect that this value-added catalog will be useful for population studies of binary star systems, target selection for precise radial velocity surveys, vetting exoplanet discoveries, and other applications.
 \end{abstract}
 
 \keywords{Astrostatistics (1882) --- Binary stars (154) --- Radial velocity (1332)}
@@ -52,6 +67,33 @@ It has been previously identified that the RV error measurements scale with RV s
 
 In the following sections, we derive and discuss the components of this model, validate and characterize the performance using simulated data, and compare to archival binary surveys.
 To start, we build a hierarchical probabilistic model to estimate the per-transit RV measurement uncertainty of the \Gaia\ survey as a function of apparent magnitude and observed color.
+
+\section{The basics}
+
+For each RV target, the \Gaia\ EDR3 catalog reports the median RV, an estimate of the error on this median, and the number of individual RV measurements (called ``transits'') that were used in this estimate.
+In our analysis, we ignore the median RV and instead only consider the RV error and number of transits.
+The RV error $\epsilon_n$ for a target $n$ is computed as \citep{Katz19}
+\begin{eqnarray}
+  {\epsilon_n}^2 = \left(\sqrt{\frac{\pi}{2\,T_n}}\,s_n\right)^2 + 0.11^2
+\end{eqnarray}
+where
+\begin{eqnarray}
+  \label{eq:sample-var}
+  {s_n}^2 = \frac{1}{N-1}\sum_{t=1}^{T_n} \left(v_{n,t} - \bar{v}_n\right)^2
+\end{eqnarray}
+is the sample variance of the individual RV measurements.
+In Equation~\ref{eq:sample-var}, $t=1,\cdots,T_n$ indexes the $T_n$ transits for target $n$ and
+\begin{eqnarray}
+  \bar{v}_n = \frac{1}{N}\sum_{t=1}^{T_n} v_{n,t}
+\end{eqnarray}
+is the mean RV.
+In all that follows, it is much simpler to reason about the sample variance ${s_n}^2$ instead of the error on the median ${\epsilon}_n$, but that isn't a problem because we can compute
+\begin{eqnarray}
+  {s_n}^2 = \frac{2\,T_n}{\pi}\left({\epsilon_n}^2 - 0.11^2\right)
+\end{eqnarray}
+for any target, using only values available in the catalog: $\epsilon_n$ and $T_n$.
+
+With this out of the way, the basic intuition underlying the methods discussed below is that, for a given target $n$, if we know the number of RV transits $T_n$ and the per-transit RV uncertainty $\sigma_n$, we can estimate the sampling distribution for ${s_n}^2$.
 
 \section{Estimating the per-transit radial velocity precision}
 
