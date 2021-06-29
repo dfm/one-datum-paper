@@ -97,7 +97,7 @@ for any target, using only values available in the catalog: $\epsilon_n$ and $T_
 
 With this out of the way, the basic intuition underlying the methods discussed below is that, for a given target $n$, if we know the number of RV transits $T_n$ and the per-transit RV uncertainty $\sigma_n$, we can estimate the sampling distribution for ${s_n}^2$.
 
-\section{Estimating the per-transit radial velocity precision}
+\section{Estimating the per-transit radial velocity precision}\label{sec:noise}
 
 A key element of our analysis is that we must make a reasonably accurate estimate of the per-transit radial velocity measurement uncertainty.
 The \Gaia\ pipeline does not release a public estimate of this, but it can be estimated from the data in the public catalog.
@@ -121,7 +121,7 @@ In other words, we must evaluate the likelihood function
 	\mathcal{L}(\sigma^2;\,\left\{{s_n}^2\right\}) &=& p(\left\{{s_n}^2\right\}\,|\,\sigma^2) \\
 	&=& \prod_{n=1}^N\int p({s_n}^2\,|\,v_{n,t})\,p(v_{n,t}\,|\,\sigma^2) \dd v_{n,t}\quad.
 \end{eqnarray}
-From this equation we can see that the statistic $X_n$
+From this equation we can see that the statistic $X_n$ (WAIT, CAN WE? MORE HERE)
 \begin{eqnarray}
 	X_n &=& \frac{(T_n - 1)\,{s_n}^2}{\sigma^2}
 \end{eqnarray}
@@ -159,7 +159,7 @@ We then apply this VI procedure in bins of color and magnitude (ADD SPECS OF GRI
 In each bin, we perform 5 iterations of the following procedure and average the estimated values of $\sigma$ across iterations.
 For each iteration, we select up to 1000 random targets within the bin\footnote{If the bin has fewer than 1000 targets, we use all of the targets.}, run 5000 steps of VI to infer the mean of the marginalized posterior for $\log \sigma$ and return that value.
 To minimize the effects of shot noise, we then lightly smooth this grid of estimated $\log \sigma$ across color and magnitude.
-\autoref{fig:noise_model} shows the estimated per-transit RV uncertainty $\sigma$ as a function of observed color and magnitude.
+\autoref{fig:noise_model} shows this estimate of the per-transit RV uncertainty $\sigma$ as a function of observed color and magnitude.
 In this figure, the shaded regions indicate parts of parameter space where there were fewer than 50 targets so our procedure could not be applied reliably.
 
 \begin{figure}
@@ -168,6 +168,10 @@ In this figure, the shaded regions indicate parts of parameter space where there
 		This model is constructed using a data-driven hierarchical model to deconvolve the measurement uncertainty and intrinsic RV variability, by assuming that ensembles of targets with similar colors and magnitudes will have the same per-transit RV measurement uncertainty.
 		The shaded regions at the edges of this figure have a sufficiently small number of targets that this ensemble model cannot be reliably used and any estimated RV uncertainties in these regions will be extrapolated. \label{fig:noise_model}}
 \end{figure}
+
+Using this grid of estimated uncertainties, we interpolate the model to the color and magnitude coordinates of each \Gaia\ RV source to provide an estimate of the baseline RV measurement uncertainty for each target.
+\autoref{fig:sigma_cmd} shows the average per-transit RV uncertainty across the color--magnitude diagram, where we have estimated the distance of each source using the inverse parallax.
+In this figure, there is some shot noise visible around the edges where the target density drops, but there is not otherwise a huge amount of structure.
 
 \begin{figure}
 	\plotone{figures/sigma_cmd.pdf}
@@ -194,6 +198,11 @@ If our Gaussian model is correct and our estimates of the per-transit measuremen
 In other words, setting $P_0 = 0.001$, we would expect 1 in 1,000 single targets to pass our cut and be incorrectly labelled as a binary.
 This number does not directly map to the false positive rate, since that will also depend on the true binary fraction, however, it gives us a tuning parameter that can trade off precision and recall in our selection.
 
+\autoref{fig:p_value_dist} shows the observed distribution of $p$-values across the full catalog.
+Our null hypothesis here is that every target is a single star with only Gaussian noise with known variance as estimated in \autoref{sec:noise} and, if this hypothesis was correct, we would expect the $p$-values to be uniformly distributed between zero and one (as indicated by the orange dashed histogram in the left panel of \autoref{fig:p_value_dist}).
+The observed distribution is significantly different from this expectation and there are a few factors causing this.
+MORE HERE.
+
 \begin{figure}
 	\plotone{figures/p_value_dist.pdf}
 	\caption{The distribution of $p$-values for the full \Gaia\ EDR3 catalog.
@@ -204,6 +213,11 @@ This number does not directly map to the false positive rate, since that will al
 		Therefore, the shaded region indicates the targets that would be classified as multiple systems.
 		\label{fig:p_value_dist}}
 \end{figure}
+
+After computing the $p$-value for every target in our catalog, we can use these values to identify targets that are likely multi-star systems or other kinds of outliers.
+\autoref{fig:binary_fraction_cmd} shows the fraction of targets with $p < 0.001$ as a function fo their location in the color--magnitude diagram.
+In the absence of other sources of noise\footnote{We discuss these other noise sources in SOME SECTION.}, this can be interpreted to first order as the binary fraction.
+With this interpretation, this figure shows some expected structures such as an equal-mass main sequence and an increased binary fraction at higher mass.
 
 \begin{figure}
 	\plotone{figures/binary_fraction_cmd.pdf}
